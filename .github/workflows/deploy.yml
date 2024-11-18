@@ -29,6 +29,6 @@ jobs:
         with:
           host: 174.129.182.223
           username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.RSYNC_PASSWORD }}
           script: |
             rsync -avzr --delete ./dist/ /var/www/html/
