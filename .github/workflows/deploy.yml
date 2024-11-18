@@ -25,7 +25,10 @@ jobs:
         run: npm run build --prod
 
       - name: Deploy to Apache Server
-        run: |
-          rsync -avzr --delete ./dist/ ubuntu@174.129.182.223:/var/www/html/
-        env:
-          RSYNC_PASSWORD: ${{ secrets.RSYNC_PASSWORD }} # Optional for password-based SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: 174.129.182.223
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            rsync -avzr --delete ./dist/ /var/www/html/
