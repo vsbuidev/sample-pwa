@@ -1,0 +1,35 @@
+name: Build and Deploy Angular App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Adjust as needed
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Angular App
+        run: npm run build --prod
+
+      - name: Deploy to Apache Server
+        uses: burnett01/rsync-deployments@v2.0.4
+        with:
+          switches: -avzr --delete
+          path: ./dist/
+          remote_path: /var/www/html/
+          remote_host: http://174.129.182.223/
+          remote_user: ubuntu
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
