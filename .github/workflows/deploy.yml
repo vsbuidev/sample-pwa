@@ -26,6 +26,6 @@ jobs:
 
       - name: Deploy to Apache Server
         run: |
-          rsync -avzr --delete ./dist/ ubuntu@http://174.129.182.223/:/var/www/html/
+          rsync -avzr --delete ./dist/ ubuntu@174.129.182.223:/var/www/html/
         env:
           RSYNC_PASSWORD: ${{ secrets.RSYNC_PASSWORD }} # Optional for password-based SSH
