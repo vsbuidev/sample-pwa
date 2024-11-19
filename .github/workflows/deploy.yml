@@ -1,4 +1,4 @@
-name: Build and Deploy Angular App
+name: CI/CD Pipeline
 
 on:
   push:
@@ -16,19 +16,50 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16" # Adjust as needed
+          node-version: "16"
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Angular App
+      - name: Build Angular Application
         run: npm run build --prod
 
-      - name: Deploy to Apache Server
-        uses: appleboy/ssh-action@v0.1.8
+      - name: Archive Build Files
+        run: tar -czf dist.tar.gz -C dist .
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
         with:
-          host: 174.129.182.223
-          username: ubuntu
-          key: ${{ secrets.RSYNC_PASSWORD }}
+          name: angular-dist
+          path: dist.tar.gz
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: angular-dist
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
-            rsync -avzr --delete ./dist/ /var/www/html/
+            # Navigate to Apache root directory
+            sudo rm -rf /var/www/html/*
+
+            # Extract and deploy new build
+            tar -xzf dist.tar.gz -C /var/www/html/
+
+            # Set permissions
+            sudo chown -R apache:apache /var/www/html
+            sudo chmod -R 755 /var/www/html
+
+            # Restart Apache
+            sudo systemctl restart httpd
