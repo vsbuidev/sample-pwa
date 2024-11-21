@@ -26,7 +26,7 @@ jobs:
           npm install
           npm run build
 
-      # Step 4: Deploy to AWS EC2.
+      # Step 4: Deploy to AWS EC2..
       - name: Deploy to EC2
         env:
           SERVER_IP: 54.164.115.98
