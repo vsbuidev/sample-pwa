@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Build and Deploy Application
 
 on:
   push:
@@ -6,61 +6,40 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      # Step 2: Set Up Node.js (if it's a Node.js project)
+      - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: 16
 
-      - name: Install Dependencies
-        run: npm install
+      # Step 3: Install Dependencies and Build
+      - name: Install and Build
+        run: |
+          npm install
+          npm run build
 
-      - name: Build Angular Application
-        run: npm run build --prod
-
-      - name: Archive Build Files
-        run: tar -czf dist.tar.gz -C dist .
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: angular-dist
-          path: dist.tar.gz
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: angular-dist
-
+      # Step 4: Deploy to AWS EC2
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.2
-        with:
-          debug: true
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            # Navigate to Apache root directory
-            sudo rm -rf /var/www/html/*
+        env:
+          SERVER_IP: 54.164.115.98
+          SSH_USER: ec2-user
+          DEPLOY_DIR: /var/www/html
 
-            # Extract and deploy new build
-            tar -xzf dist.tar.gz -C /var/www/html/
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          # scp -i private_key.pem -o StrictHostKeyChecking=no -r dist/sample-pwa/* $SSH_USER@$SERVER_IP:$DEPLOY_DIR
+          # ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo systemctl restart httpd"
 
-            # Set permissions
-            sudo chown -R apache:apache /var/www/html
-            sudo chmod -R 755 /var/www/html
-
-            # Restart Apache
-            sudo systemctl restart httpd
+          scp -i private_key.pem -o StrictHostKeyChecking=no -r dist/sample-pwa/* $SSH_USER@$SERVER_IP:$DEPLOY_DIR
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo chown -R ec2-user:ec2-user $DEPLOY_DIR && sudo chmod -R 755 $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo cp -r $DEPLOY_DIR/* /var/www/html/ && sudo rm -rf $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo systemctl restart httpd"
