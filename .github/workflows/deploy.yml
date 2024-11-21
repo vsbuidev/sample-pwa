@@ -1,4 +1,4 @@
-name: Build and Deploy Angular Application
+name: Build and Deploy Application
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set Up Node.js
+      # Step 2: Set Up Node.js (if it's a Node.js project)
       - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
@@ -24,10 +24,9 @@ jobs:
       - name: Install and Build
         run: |
           npm install
-          npm run build --prod
-          tar -czf dist.tar.gz -C dist .
+          npm run build
 
-      # Step 4: Deploy to AWS EC2
+      # Step 4: Deploy to AWS EC2....
       - name: Deploy to EC2
         env:
           SERVER_IP: 54.164.115.98
@@ -37,15 +36,11 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
+          # scp -i private_key.pem -o StrictHostKeyChecking=no -r dist/sample-pwa/* $SSH_USER@$SERVER_IP:$DEPLOY_DIR
+          # ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo systemctl restart httpd"
 
-          # Upload the built archive
-          scp -i private_key.pem -o StrictHostKeyChecking=no dist.tar.gz $SSH_USER@$SERVER_IP:/home/$SSH_USER/
-
-          # Deploy on the server
-          ssh -i private_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SERVER_IP << EOF
-            sudo rm -rf $DEPLOY_DIR/*
-            sudo tar -xzf /home/$SSH_USER/dist.tar.gz -C $DEPLOY_DIR
-            sudo chown -R apache:apache $DEPLOY_DIR
-            sudo chmod -R 755 $DEPLOY_DIR
-            sudo systemctl restart httpd
-          EOF
+          scp -i private_key.pem -o StrictHostKeyChecking=no -r dist/sample-pwa/* $SSH_USER@$SERVER_IP:$DEPLOY_DIR
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo chown -R ec2-user:ec2-user $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo chmod -R 755 $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo cp -r $DEPLOY_DIR/* /var/www/html/ && sudo rm -rf $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo systemctl restart httpd"
