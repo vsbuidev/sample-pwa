@@ -42,7 +42,7 @@ jobs:
           scp -i private_key.pem -o StrictHostKeyChecking=no dist.tar.gz $SSH_USER@$SERVER_IP:/home/$SSH_USER/
 
           # Deploy on the server
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << EOF
+          ssh -i private_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SERVER_IP << EOF
             sudo rm -rf $DEPLOY_DIR/*
             sudo tar -xzf /home/$SSH_USER/dist.tar.gz -C $DEPLOY_DIR
             sudo chown -R apache:apache $DEPLOY_DIR
