@@ -41,5 +41,5 @@ jobs:
 
           scp -i private_key.pem -o StrictHostKeyChecking=no -r dist/sample-pwa/* $SSH_USER@$SERVER_IP:$DEPLOY_DIR
           # ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo chown -R ec2-user:ec2-user $DEPLOY_DIR && sudo chmod -R 755 $DEPLOY_DIR"
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo cp -r $DEPLOY_DIR/* /var/www/html/ && sudo rm -rf $DEPLOY_DIR"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo rm -rf $DEPLOY_DIR && sudo cp -r $DEPLOY_DIR/* /var/www/html/"
           ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "sudo systemctl restart httpd"
