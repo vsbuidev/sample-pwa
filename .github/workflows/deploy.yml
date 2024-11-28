@@ -31,7 +31,7 @@ jobs:
       - name: Deploy to EC2
         env:
           SERVER_IP: 3.82.36.80
-          SSH_USER: ec2-user
+          SSH_USER: ubuntu
           DEPLOY_DIR: /var/www/html
 
         run: |
@@ -49,7 +49,7 @@ jobs:
             sudo chown -R apache:apache $DEPLOY_DIR
             sudo chmod -R 755 $DEPLOY_DIR
             sudo rm -f /home/$SSH_USER/dist.tar.gz
-            sudo systemctl restart httpd
+            sudo systemctl restart apache2
           EOF
 
           # Clean up
