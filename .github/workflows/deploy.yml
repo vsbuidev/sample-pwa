@@ -27,7 +27,7 @@ jobs:
           npm run build --prod
           tar -czf dist.tar.gz -C dist/sample-pwa .
 
-      # Step 4: Deploy to AWS EC2
+      # Step 4: Deploy to AWS EC2...
       - name: Deploy to EC2
         env:
           SERVER_IP: 52.71.107.94
