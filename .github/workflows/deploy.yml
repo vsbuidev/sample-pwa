@@ -85,7 +85,7 @@ jobs:
           # Clean up
           rm private_key.pem
 
-      # Step 8: Rollback to Previous Version (If Tests Fail)
+      # Step 8: Rollback to Previous Version (If Tests Fail)...
       - name: Rollback Deployment (If Tests Failed)
         if: failure() # This step only runs if the tests fail
         env:
