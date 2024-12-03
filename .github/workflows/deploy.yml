@@ -20,20 +20,50 @@ jobs:
         with:
           node-version: 16
 
-      # Step 3: Install Dependencies and Build
-      - name: Install and Build
+      # Step 3: Install Dependencies
+      - name: Install Dependencies
         run: |
           npm install
+
+      # Step 4: Run Tests
+      - name: Run Tests
+        id: test
+        run: |
+          npm run test -- --watch=false --browsers=ChromeHeadless || exit 1
+
+      # Step 5: If Tests Pass, Build the Application
+      - name: Build Application
+        if: success() # This step only runs if the tests pass
+        run: |
           npm run build --prod
           tar -czf dist.tar.gz -C dist/sample-pwa .
 
-      # Step 4: Deploy to AWS EC2
-      - name: Deploy to EC2
+      # Step 6: Backup Current Deployment on the Server.
+      - name: Backup Current Deployment
         env:
-          SERVER_IP: 44.203.202.172
+          SERVER_IP: 3.82.175.100
           SSH_USER: ec2-user
           DEPLOY_DIR: /var/www/html
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
 
+          # Backup the current deployed version
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << EOF
+            sudo cp -r $DEPLOY_DIR /home/$SSH_USER/backup
+            sudo tar -czf /home/$SSH_USER/backup.tar.gz -C /home/$SSH_USER backup
+          EOF
+
+          # Clean up private key
+          rm private_key.pem
+
+      # Step 7: Deploy to EC2 (Only if Tests Passed)
+      - name: Deploy to EC2
+        if: success() # This step only runs if the tests pass
+        env:
+          SERVER_IP: 3.82.175.100
+          SSH_USER: ec2-user
+          DEPLOY_DIR: /var/www/html
         run: |
           set -e
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
@@ -53,4 +83,28 @@ jobs:
           EOF
 
           # Clean up
+          rm private_key.pem
+
+      # Step 8: Rollback to Previous Version (If Tests Fail)
+      - name: Rollback Deployment (If Tests Failed)
+        if: failure() # This step only runs if the tests fail
+        env:
+          SERVER_IP: 3.82.175.100
+          SSH_USER: ec2-user
+          DEPLOY_DIR: /var/www/html
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+          # Rollback to previous backup
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << EOF
+            sudo rm -rf $DEPLOY_DIR/*
+            sudo tar -xzf /home/$SSH_USER/backup.tar.gz -C $DEPLOY_DIR
+            sudo chown -R apache:apache $DEPLOY_DIR
+            sudo chmod -R 755 $DEPLOY_DIR
+            sudo rm -f /home/$SSH_USER/backup.tar.gz
+            sudo systemctl restart httpd
+          EOF
+
+          # Clean up private key
           rm private_key.pem
