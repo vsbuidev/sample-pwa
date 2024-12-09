@@ -31,6 +31,19 @@ jobs:
         run: |
           npm run test -- --watch=false --browsers=ChromeHeadless || exit 1
 
+      # Step 4.1: Static Code Analysis with SonarQube
+      - name: Static Code Analysis
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npm install --save-dev sonar-scanner
+          npx sonar-scanner \
+            -Dsonar.projectKey=sample-pwa \
+            -Dsonar.sources=src \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
+
       # Step 5: If Tests Pass, Build the Application
       - name: Build Application
         if: success() # This step only runs if the tests pass
