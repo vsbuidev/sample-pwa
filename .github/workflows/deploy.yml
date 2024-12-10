@@ -48,7 +48,7 @@ jobs:
           npm install --save-dev sonar-scanner
           npx sonar-scanner -X \
             -Dsonar.organization=$SONAR_ORGANIZATION \
-            -Dsonar.projectKey=sample-pwa \
+            -Dsonar.projectKey=vsbuidev_sample-pwa \
             -Dsonar.sources=src \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
