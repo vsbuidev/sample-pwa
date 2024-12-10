@@ -46,7 +46,7 @@ jobs:
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
           npm install --save-dev sonar-scanner
-          npx sonar-scanner \
+          npx sonar-scanner -X \
             -Dsonar.organization=$SONAR_ORGANIZATION \
             -Dsonar.projectKey=sample-pwa \
             -Dsonar.sources=src \
