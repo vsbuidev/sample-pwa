@@ -14,6 +14,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Step 1.1: Set Up Java 17
+      - name: Set Up Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: "temurin"
+
       # Step 2: Set Up Node.js
       - name: Set Up Node.js
         uses: actions/setup-node@v3
@@ -38,7 +45,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           npm install --save-dev sonar-scanner
-          npx sonar-scanner \
+          npx sonar-scanner -X \
             -Dsonar.projectKey=sample-pwa \
             -Dsonar.sources=src \
             -Dsonar.host.url=$SONAR_HOST_URL \
@@ -54,7 +61,7 @@ jobs:
       # Step 6: Backup Current Deployment on the Server.
       - name: Backup Current Deployment
         env:
-          SERVER_IP: 3.82.175.100
+          SERVER_IP: 3.90.239.139
           SSH_USER: ec2-user
           DEPLOY_DIR: /var/www/html
         run: |
@@ -74,7 +81,7 @@ jobs:
       - name: Deploy to EC2
         if: success() # This step only runs if the tests pass
         env:
-          SERVER_IP: 3.82.175.100
+          SERVER_IP: 3.90.239.139
           SSH_USER: ec2-user
           DEPLOY_DIR: /var/www/html
         run: |
@@ -102,7 +109,7 @@ jobs:
       - name: Rollback Deployment (If Tests Failed)
         if: failure() # This step only runs if the tests fail
         env:
-          SERVER_IP: 3.82.175.100
+          SERVER_IP: 3.90.239.139
           SSH_USER: ec2-user
           DEPLOY_DIR: /var/www/html
         run: |
