@@ -43,9 +43,11 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
           npm install --save-dev sonar-scanner
-          npx sonar-scanner -X \
+          npx sonar-scanner \
+            -Dsonar.organization=$SONAR_ORGANIZATION \
             -Dsonar.projectKey=sample-pwa \
             -Dsonar.sources=src \
             -Dsonar.host.url=$SONAR_HOST_URL \
