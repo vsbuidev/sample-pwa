@@ -62,10 +62,6 @@ jobs:
 
       # Step 6: Backup Current Deployment on the Server.
       - name: Backup Current Deployment
-        env:
-          SERVER_IP: 3.90.239.139
-          SSH_USER: ec2-user
-          DEPLOY_DIR: /var/www/html
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
@@ -82,10 +78,6 @@ jobs:
       # Step 7: Deploy to EC2 (Only if Tests Passed)
       - name: Deploy to EC2
         if: success() # This step only runs if the tests pass
-        env:
-          SERVER_IP: 3.90.239.139
-          SSH_USER: ec2-user
-          DEPLOY_DIR: /var/www/html
         run: |
           set -e
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
@@ -110,10 +102,6 @@ jobs:
       # Step 8: Rollback to Previous Version (If Tests Fail)...
       - name: Rollback Deployment (If Tests Failed)
         if: failure() # This step only runs if the tests fail
-        env:
-          SERVER_IP: 3.90.239.139
-          SSH_USER: ec2-user
-          DEPLOY_DIR: /var/www/html
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
